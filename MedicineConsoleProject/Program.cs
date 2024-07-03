@@ -10,6 +10,7 @@ public class Program
     {
         UserService userService = new();
         MedicineService medicineService = new();
+        CategoryService categoryService = new();
 
         //list all categoriee
         Helper.Print("Welcome!", ConsoleColor.DarkCyan);
@@ -54,13 +55,10 @@ public class Program
                 }
                 catch (NotFoundException e)
                 {
-                    Helper.Print(e.Message, ConsoleColor.DarkCyan);
-                    goto repeatPassword;
+                    Helper.Print(e.Message, ConsoleColor.Red);
+                    goto Menu;
                 }
-                catch (Exception)
-                {
-                    throw;
-                }
+             
             case "3":
                 Helper.Print("Bye bye ................", ConsoleColor.Yellow);
                 return;
@@ -68,12 +66,32 @@ public class Program
                 Helper.Print("Please enter valid command", ConsoleColor.Red);
                 goto Menu;
         }
+
+        Helper.Print("1.Create new Category \n" +
+            "2.Create new Medicine \n " +
+            "3.Remove a medicine" +
+            "4.List all medicines" +
+            "5.Update medicine" +
+            "6.Find medicine by id" +
+            "7.Find medicine by Name" +
+            "8.Find medicine by category" +
+            "9.View medicines" +
+            "0.Exit",ConsoleColor.Cyan);
+
         string loginUserCommand = Console.ReadLine();
 
-        //Helper.Print("1.Create new Category \n" +
-        //    "2.Create new Medicine \n " +
-        //    "3.");
 
+        switch (loginUserCommand)
+        {
+            case "1":
+                Helper.Print("Please enter category name",ConsoleColor.DarkCyan);
+                string categoryName = Console.ReadLine();
+                Category category = new(categoryName);
+                categoryService.CreateCategory(category);
+                break;
+            default:
+                break;
+        }
 
     }
 
