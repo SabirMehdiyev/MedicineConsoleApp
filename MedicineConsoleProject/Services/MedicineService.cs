@@ -1,6 +1,7 @@
 ﻿using MedicineConsoleProject.ExceptionsFolder;
 using MedicineConsoleProject.Models;
-using System.Xml;
+using MedicineConsoleProject.Utilities;
+
 
 namespace MedicineConsoleProject.Services;
 
@@ -10,7 +11,7 @@ public class MedicineService
     {
         foreach (var item in DB.Categories)
         {
-            if (medicine.Id == item.Id)
+            if (medicine.CategoryId == item.Id)
             {
                 Array.Resize(ref DB.Medicines, DB.Medicines.Length + 1);
                 DB.Medicines[DB.Medicines.Length - 1] = medicine;
@@ -53,13 +54,31 @@ public class MedicineService
         {
             if (item.CategoryId == categoryId)
             {
-                Console.WriteLine($"ID:{item.Id} - Name:{item.Name} - Price:{item.Price}");
+                Helper.Print($"ID:{item.Id} - Name:{item.Name} - Price:{item.Price}", ConsoleColor.Cyan);
             }
         }
 
         throw new NotFoundException("Bele adli tapilmadi");
     }
 
+    public void RemoveMedicine(int id)
+    {
+        for (int i = 0; i < DB.Medicines.Length; i++)
+        { 
+            var medicine = DB.Medicines[i];
+
+            if (medicine.Id == id)
+            {
+                for (int j = i; j < DB.Medicines.Length - 1; j++)
+                {
+                    DB.Medicines[j] = DB.Medicines[j + 1];
+                }
+
+                Array.Resize(ref DB.Medicines, DB.Medicines.Length - 1);
+                Helper.Print("Product successfully deleted", ConsoleColor.Red);
+            }
+        }
+    }
     public void UpdateMedicine(int id,Medicine medicine)
     {
         foreach(var item in DB.Medicines)
@@ -67,7 +86,10 @@ public class MedicineService
             if (item.Id == id)
             {
                 item.Name = medicine.Name;
+                item.Price = medicine.Price;
+                item.CategoryId = medicine.CategoryId;
             }
         }
+        throw new NotFoundException($"{id} id-li medicine tapilmadi");
     }
 }

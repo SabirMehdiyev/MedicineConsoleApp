@@ -8,9 +8,8 @@ public static class DB
 
     static DB()
     {
-
         Users = new User[0];
         Categories = new Category[0];
+        Medicines = new Medicine[0];
     }
-
 }

@@ -1,5 +1,6 @@
 ﻿using MedicineConsoleProject.ExceptionsFolder;
 using MedicineConsoleProject.Models;
+using MedicineConsoleProject.Utilities;
 
 namespace MedicineConsoleProject.Services;
 
@@ -13,11 +14,12 @@ public class UserService
             {
                 if (user.Password == password) 
                 {
+                    Helper.Print("Successful login", ConsoleColor.Green);
                     return user;
                 }
             }
         }
-        throw new NotFoundException("User tapilmadi");
+        throw new NotFoundException("Invalid email or password");
 
     }
     public void AddUser(User user)
@@ -25,10 +27,51 @@ public class UserService
         Array.Resize(ref DB.Users, DB.Users.Length+1);
         DB.Users[DB.Users.Length-1] = user;
     }
-    public void CreateCategory(Category category)
+
+    public void RegisterUser()
     {
-        Array.Resize(ref DB.Categories, DB.Categories.Length + 1);
-        DB.Categories[DB.Categories.Length - 1] = category;
+        Helper.Print("Please enter fullName", ConsoleColor.DarkCyan);
+        string fullName = Console.ReadLine();
+        repeatEmail:
+        Helper.Print("Please enter email", ConsoleColor.DarkCyan);
+        string email = Console.ReadLine();
+        if (!email.Contains("@"))
+        {
+            Helper.Print("Invalid email. Please try again.", ConsoleColor.Red);
+            goto repeatEmail;
+        }
+        repeatPassword:
+        Helper.Print("Please enter password:", ConsoleColor.DarkCyan);
+        string password = Console.ReadLine();
+
+        if (IsValidPassword(password))
+        {
+            User user = new User(fullName,email, password);
+            AddUser(user);
+            Helper.Print("User registered successfully", ConsoleColor.Green);
+        }
+        else
+        {
+            Helper.Print("Password must be at least 8 characters long, containing upper, lower case letters and digits.", ConsoleColor.Red);
+            goto repeatPassword;
+        }
+    }
+    static bool IsValidPassword(string password)
+    {
+        bool hasUpper = false, hasLower = false, hasDigit = false;
+
+        if (password.Length >= 8)
+        {
+            foreach (char c in password)
+            {
+                if (char.IsUpper(c)) hasUpper = true;
+                if (char.IsLower(c)) hasLower = true;
+                if (char.IsDigit(c)) hasDigit = true;
+
+                if (hasUpper && hasLower && hasDigit) return true;
+            }
+        }
+        return false;
     }
 
 }
