@@ -11,4 +11,11 @@ public class CategoryService
         DB.Categories[DB.Categories.Length - 1] = category;
         Helper.Print("Category created successfully", ConsoleColor.Green);
     }
+    public void GetAllCategories()
+    {
+        foreach (var item in DB.Categories)
+        {
+            Helper.Print($"{item.Id}-{item.Name}", ConsoleColor.DarkMagenta);
+        }
+    }
 }

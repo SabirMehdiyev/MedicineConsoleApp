@@ -1,6 +1,7 @@
 ﻿using MedicineConsoleProject.ExceptionsFolder;
 using MedicineConsoleProject.Models;
 using MedicineConsoleProject.Utilities;
+using System.Security.Cryptography.X509Certificates;
 
 
 namespace MedicineConsoleProject.Services;
@@ -15,16 +16,35 @@ public class MedicineService
             {
                 Array.Resize(ref DB.Medicines, DB.Medicines.Length + 1);
                 DB.Medicines[DB.Medicines.Length - 1] = medicine;
+                Helper.Print("Medicine created successfully!", ConsoleColor.Green);
+                return;
             }
         }
         throw new NotFoundException("Category tapilmadi");
     }
 
-    public Medicine[] GetAllMedicines()
+    public void GetAllMedicines(int userId)
     {
-        return DB.Medicines;
+        foreach (var item in DB.Medicines)
+        {
+            if (item.UserId == userId)
+            {
+                Category category1 = new("");
+                foreach (var category in DB.Categories)
+                {
+                    if (category.Id == item.CategoryId)
+                    {
+                        category1 = category;
+                        break;
+                    }
+                }
+                Helper.Print("----------------------------------------------------------------------------------------------------------", ConsoleColor.White);
+                Helper.Print($"Medicine:{item.Name} - Price:{item.Price}- Category:{category1.Name}- CreatedDate/Time:{item.CreatedDate}", ConsoleColor.White);
+                Helper.Print("----------------------------------------------------------------------------------------------------------", ConsoleColor.White);
+            }
+        }
     }
-    public Medicine GetMedicineById(int id)
+    public Medicine GetMedicineById(int id, int userId)
     {
         foreach (var item in DB.Medicines)
         {
@@ -36,7 +56,7 @@ public class MedicineService
 
         throw new NotFoundException("Bele id-li tapilmadi");
     }
-    public Medicine GetMedicineByName(string name)
+    public Medicine GetMedicineByName(string name, int userId)
     {
         foreach (var item in DB.Medicines)
         {
@@ -48,17 +68,22 @@ public class MedicineService
 
         throw new NotFoundException("Bele adli tapilmadi");
     }
-    public void GetMedicineByCategory(int categoryId)
+    public void GetMedicineByCategory(int categoryId, int userId)
     {
+        bool isFound = false;
+
         foreach (var item in DB.Medicines)
         {
-            if (item.CategoryId == categoryId)
+            if (item.CategoryId == categoryId && item.UserId == userId)
             {
-                Helper.Print($"ID:{item.Id} - Name:{item.Name} - Price:{item.Price}", ConsoleColor.Cyan);
+                Helper.Print($"MedicineId: {item.Id} - Name: {item.Name} - Price: {item.Price}", ConsoleColor.White);
+                isFound = true;
             }
         }
-
-        throw new NotFoundException("Bele adli tapilmadi");
+        if (!isFound)
+        {
+            throw new NotFoundException("Bele adli tapilmadi");
+        }
     }
 
     public void RemoveMedicine(int id)
