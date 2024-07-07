@@ -39,16 +39,8 @@ public class Program
                 string password = Console.ReadLine();
                 try
                 {
-                    string fullName = "";
                     activeUser = userService.Login(email, password);
-                    foreach (var item in DB.Users)
-                    {
-                        if (email == item.Email)
-                        {
-                            fullName = item.Fullname;
-                        }
-                    }
-                    Helper.Print($"Welcome, {fullName}! ", ConsoleColor.DarkCyan);
+                    Helper.Print($"Welcome, {activeUser.Fullname}! ", ConsoleColor.DarkCyan);
 
                     break;
 
@@ -71,13 +63,14 @@ public class Program
         Helper.Print(
             "1.Create new Category\n" +
             "2.Create new Medicine\n" +
-            "3.Remove a medicine\n" +  //getallcategories
+            "3.Remove a medicine\n" +
             "4.List all medicines\n" +
             "5.Update medicine\n" +
             "6.Find medicine by id\n" +
             "7.Find medicine by Name\n" +
             "8.Find medicine by category\n" +
-            "0.Exit", ConsoleColor.Cyan);
+            "9.List all categories\n" +
+            "0.Log out", ConsoleColor.Cyan);
 
         string loginUserCommand = Console.ReadLine();
 
@@ -113,10 +106,10 @@ public class Program
                 }
                 goto UserMenu;
             case "3":
-                repeatMedID:
+            repeatMedID:
                 Helper.Print("Existing medicines:", ConsoleColor.DarkYellow);
                 medicineService.GetAllMedicines(activeUser.Id);
-                Helper.Print("Please enter the medicine ID you want to delete:" , ConsoleColor.DarkCyan);
+                Helper.Print("Please enter the medicine ID you want to delete:", ConsoleColor.DarkCyan);
                 string medicineIdStr = Console.ReadLine();
                 if (!int.TryParse(medicineIdStr, out int medicineId))
                 {
@@ -132,25 +125,27 @@ public class Program
             repeatNewMedicine:
                 Helper.Print("Existing medicines:", ConsoleColor.DarkYellow);
                 medicineService.GetAllMedicines(activeUser.Id);
+            updateId:
                 Helper.Print("Please enter the ID of the medicine you want to update:", ConsoleColor.DarkCyan);
                 string idStr = Console.ReadLine();
                 if (!int.TryParse(idStr, out int id))
                 {
                     Helper.Print("Please enter a valid ID!", ConsoleColor.Red);
-                    return;
+                    goto updateId;
                 }
+
                 Helper.Print("Please enter the new name for the medicine:", ConsoleColor.DarkCyan);
                 string newName = Console.ReadLine();
+            newPrice:
                 Helper.Print("Please enter the new price for the medicine:", ConsoleColor.DarkCyan);
                 string newPriceStr = Console.ReadLine();
                 if (!decimal.TryParse(newPriceStr, out decimal newPrice))
                 {
                     Helper.Print("Please enter a valid price!", ConsoleColor.Red);
-                    return;
+                    goto newPrice;
                 }
                 int newCategoryId = GetValidCategoryID();
                 Medicine newMedicine = new(newName, newPrice, DateTime.Now, newCategoryId, 0);
-
                 try
                 {
                     medicineService.UpdateMedicine(id, newMedicine);
@@ -162,17 +157,40 @@ public class Program
                     goto repeatNewMedicine;
                 }
                 goto UserMenu;
-            case "7":
-                Helper.Print("Existing medicines:", ConsoleColor.Cyan);
-                foreach (var med in DB.Medicines)
+            case "6":
+            medId:
+                Helper.Print("Please enter medicine ID:", ConsoleColor.DarkCyan);
+                string medIdStr = Console.ReadLine();
+                if (!int.TryParse(medIdStr, out int medId))
                 {
-                    Helper.Print($"ID: {med.Id} - Name: {med.Name}", ConsoleColor.DarkCyan);
+                    Helper.Print("Please enter a valid ID!", ConsoleColor.Red);
+                    goto medId;
                 }
+                try
+                {
+                    Medicine med = medicineService.GetMedicineById(medId, activeUser.Id);
+                    string medCategoryName = "";
+                    foreach (var cat in DB.Categories)
+                    {
+                        if (cat.Id == med.CategoryId)
+                        {
+                            medCategoryName = cat.Name;
+                            break;
+                        }
+                    }
+                    Helper.Print($"Medicine:{med.Name} - Price:{med.Price}- Category:{medCategoryName}- CreatedDate/Time:{med.CreatedDate}", ConsoleColor.White);
+                }
+                catch (NotFoundException ex)
+                {
+                    Helper.Print(ex.Message, ConsoleColor.Red);
+                }
+                goto UserMenu;
+            case "7":
                 Helper.Print("Please enter medicine name:", ConsoleColor.Blue);
                 string medName = Console.ReadLine();
                 try
                 {
-                   Medicine med = medicineService.GetMedicineByName(medName, activeUser.Id);
+                    Medicine med = medicineService.GetMedicineByName(medName, activeUser.Id);
                     string medCategoryName = "";
                     foreach (var cat in DB.Categories)
                     {
@@ -201,8 +219,16 @@ public class Program
                 }
 
                 goto UserMenu;
+            case "9":
+                categoryService.GetAllCategories();
+                goto UserMenu;
+            case "0":
+                Helper.Print("Logging out...", ConsoleColor.Cyan);
+                activeUser = null;
+                goto Menu;
             default:
-                break;
+                Helper.Print("Please enter valid command", ConsoleColor.Red);
+                goto UserMenu;
         }
 
     }
@@ -223,7 +249,16 @@ public class Program
             Helper.Print("Please enter a valid categoryId!", ConsoleColor.Red);
             goto categoryIdRepeat;
         }
-        return categoryId;
+        foreach (var category in DB.Categories)
+        {
+            if (category.Id == categoryId)
+            {
+                return categoryId;
+            }
+        }
+
+        Helper.Print("Category ID does not exist. Please enter a valid category ID.", ConsoleColor.Red);
+        goto categoryIdRepeat;
     }
 
 }

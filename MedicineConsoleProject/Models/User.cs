@@ -2,12 +2,14 @@
 
 public class User:BaseEntity
 {
+    private static int _id = 0;
     public string Fullname { get; set; }
     public string Email { get; set; }
     public string Password { get; set; }
 
     public User(string fullName, string email,string password)
     {
+        Id = ++_id;
         Fullname = fullName;
         Email = email;
         Password = password;

@@ -22,12 +22,12 @@ public class MedicineService
         throw new NotFoundException("Category tapilmadi");
     }
 
-    public void GetAllMedicines(int userId)
+    public  void GetAllMedicines(int userId)
     {
         bool isMedicinesFound = false;
         foreach (var item in DB.Medicines)
         {
-            if (item.UserId == userId)
+            if (item.UserId == userId) 
             {
                 isMedicinesFound = true;
                 Category category1 = new("");
@@ -71,7 +71,7 @@ public class MedicineService
                 return item;
             }
         }
-
+        
         throw new NotFoundException("Bele adli tapilmadi");
     }
     public void GetMedicineByCategory(int categoryId, int userId)
