@@ -6,13 +6,13 @@ namespace MedicineConsoleProject.Services;
 
 public class UserService
 {
-    public User Login(string email , string password)
+    public User Login(string email, string password)
     {
         foreach (var user in DB.Users)
         {
             if (user.Email == email)
             {
-                if (user.Password == password) 
+                if (user.Password == password)
                 {
                     Helper.Print("Successful login", ConsoleColor.Green);
                     return user;
@@ -24,15 +24,21 @@ public class UserService
     }
     public void AddUser(User user)
     {
-        Array.Resize(ref DB.Users, DB.Users.Length+1);
-        DB.Users[DB.Users.Length-1] = user;
+        Array.Resize(ref DB.Users, DB.Users.Length + 1);
+        DB.Users[DB.Users.Length - 1] = user;
     }
 
     public void RegisterUser()
     {
+    repeatFullName:
         Helper.Print("Please enter fullName", ConsoleColor.DarkCyan);
-        string fullName = Console.ReadLine();
-        repeatEmail:
+        string fullName = Console.ReadLine().Trim();
+        if (fullName.Length == 0)
+        {
+            Helper.Print("Fullname can't be empty!", ConsoleColor.Red);
+            goto repeatFullName;
+        }
+    repeatEmail:
         Helper.Print("Please enter email", ConsoleColor.DarkCyan);
         string email = Console.ReadLine();
         if (!email.Contains("@"))
@@ -40,13 +46,21 @@ public class UserService
             Helper.Print("Invalid email. Please try again.", ConsoleColor.Red);
             goto repeatEmail;
         }
-        repeatPassword:
+        foreach (var user in DB.Users)
+        {
+            if (email.Trim() == user.Email)
+            {
+                Helper.Print("This email used by another user. Please enter a different email.", ConsoleColor.Red);
+                goto repeatEmail;
+            }
+        }
+    repeatPassword:
         Helper.Print("Please enter password:", ConsoleColor.DarkCyan);
         string password = Console.ReadLine();
 
         if (IsValidPassword(password))
         {
-            User user = new User(fullName,email, password);
+            User user = new User(fullName, email, password);
             AddUser(user);
             Helper.Print("User registered successfully", ConsoleColor.Green);
         }

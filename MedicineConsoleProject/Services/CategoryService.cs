@@ -11,11 +11,22 @@ public class CategoryService
         DB.Categories[DB.Categories.Length - 1] = category;
         Helper.Print("Category created successfully", ConsoleColor.Green);
     }
-    public void GetAllCategories()
+    public void GetAllCategories(int userId)
     {
+        bool isCategoriesFound = false;
         foreach (var item in DB.Categories)
         {
-            Helper.Print($"{item.Id}-{item.Name}", ConsoleColor.DarkMagenta);
+            if (item.UserId == userId)
+            {
+                isCategoriesFound = true;
+                Helper.Print("-----------------------------", ConsoleColor.White);
+                Helper.Print($"{item.Id}-{item.Name}", ConsoleColor.White);
+                Helper.Print("-----------------------------", ConsoleColor.White);
+            }
+        }
+        if (!isCategoriesFound)
+        {
+            Helper.Print("No categories found for this user.", ConsoleColor.Yellow);
         }
     }
 }

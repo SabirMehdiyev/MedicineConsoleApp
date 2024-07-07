@@ -80,7 +80,7 @@ public class Program
             case "1":
                 Helper.Print("Please enter category name:", ConsoleColor.DarkCyan);
                 string categoryName = Console.ReadLine();
-                Category category = new(categoryName);
+                Category category = new(categoryName, activeUser.Id);
                 categoryService.CreateCategory(category);
                 goto UserMenu;
             case "2":
@@ -94,7 +94,7 @@ public class Program
                     Helper.Print("Please enter valid price!!", ConsoleColor.Red);
                     goto repeatPrice;
                 }
-                int categoryId = GetValidCategoryID();
+                int categoryId = GetValidCategoryID(activeUser.Id);
                 Medicine medicine = new(medicineName, price, DateTime.Now, categoryId, activeUser.Id);
                 try
                 {
@@ -144,7 +144,7 @@ public class Program
                     Helper.Print("Please enter a valid price!", ConsoleColor.Red);
                     goto newPrice;
                 }
-                int newCategoryId = GetValidCategoryID();
+                int newCategoryId = GetValidCategoryID(activeUser.Id);
                 Medicine newMedicine = new(newName, newPrice, DateTime.Now, newCategoryId, 0);
                 try
                 {
@@ -208,7 +208,7 @@ public class Program
                 }
                 goto UserMenu;
             case "8":
-                int searchCategoryId = GetValidCategoryID();
+                int searchCategoryId = GetValidCategoryID(activeUser.Id);
                 try
                 {
                     medicineService.GetMedicineByCategory(searchCategoryId, activeUser.Id);
@@ -220,7 +220,7 @@ public class Program
 
                 goto UserMenu;
             case "9":
-                categoryService.GetAllCategories();
+                categoryService.GetAllCategories(activeUser.Id);
                 goto UserMenu;
             case "0":
                 Helper.Print("Logging out...", ConsoleColor.Cyan);
@@ -234,13 +234,20 @@ public class Program
     }
 
 
-    public static int GetValidCategoryID()
+    public static int GetValidCategoryID(int userId)
     {
     categoryIdRepeat:
         Helper.Print("Existing categories:", ConsoleColor.Green);
         foreach (var category in DB.Categories)
         {
-            Helper.Print($"ID: {category.Id} - Name: {category.Name}", ConsoleColor.DarkCyan);
+            if (category.UserId == userId)
+            {
+                Helper.Print($"ID: {category.Id} - Name: {category.Name}", ConsoleColor.DarkCyan);
+            }
+            else
+            {
+                Helper.Print("No categories found for this user.", ConsoleColor.Yellow);
+            }
         }
         Helper.Print("Please enter medicine categoryId:", ConsoleColor.DarkCyan);
         string categoryIdStr = Console.ReadLine();

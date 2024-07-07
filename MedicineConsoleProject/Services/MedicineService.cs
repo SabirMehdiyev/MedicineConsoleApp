@@ -30,7 +30,7 @@ public class MedicineService
             if (item.UserId == userId) 
             {
                 isMedicinesFound = true;
-                Category category1 = new("");
+                Category category1 = new("",userId);
                 foreach (var category in DB.Categories)
                 {
                     if (category.Id == item.CategoryId)
