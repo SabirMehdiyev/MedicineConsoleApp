@@ -30,6 +30,13 @@ public class UserService
 
     public void RegisterUser()
     {
+        bool isAdmin = false;
+        Helper.Print("Are you registering as admin? (Y/N)", ConsoleColor.DarkCyan);
+        string isAdminSelect = Console.ReadLine().Trim().ToUpper();
+        if (isAdminSelect == "Y" || isAdminSelect == "YES")
+        {
+            isAdmin = true;
+        }
     repeatFullName:
         Helper.Print("Please enter fullName", ConsoleColor.DarkCyan);
         string fullName = Console.ReadLine().Trim();
@@ -60,7 +67,7 @@ public class UserService
 
         if (IsValidPassword(password))
         {
-            User user = new User(fullName, email, password);
+            User user = new User(fullName, email, password, isAdmin);
             AddUser(user);
             Helper.Print("User registered successfully", ConsoleColor.Green);
         }
@@ -69,6 +76,43 @@ public class UserService
             Helper.Print("Password must be at least 8 characters long, containing upper, lower case letters and digits.", ConsoleColor.Red);
             goto repeatPassword;
         }
+    }
+
+    public void GetAllUsers()
+    {
+        foreach (var user in DB.Users)
+        {
+            Helper.Print("-------------------------------------------------------------------------------------------------------------------", ConsoleColor.White);
+            Helper.Print($"UserId:{user.Id} - Email:{user.Email} - Fullname:{user.Fullname} - Password:{user.Password}", ConsoleColor.White);
+            Helper.Print("-------------------------------------------------------------------------------------------------------------------", ConsoleColor.White);
+        }
+    }
+
+    public void RemoveUser(int id)
+    {
+        for (int i = 0; i < DB.Users.Length; i++)
+        {
+            var user = DB.Users[i];
+
+            if (user.Id == id)
+            {
+                if (user.IsAdmin)
+                {
+                    Helper.Print("Admin cannot be removed.", ConsoleColor.Red);
+                    return;
+                }
+                for (int j = i; j < DB.Users.Length - 1; j++)
+                {
+                    DB.Users[j] = DB.Users[j + 1];
+                }
+
+                Array.Resize(ref DB.Users, DB.Users.Length - 1);
+                Helper.Print("User successfully deleted", ConsoleColor.Green);
+                return;
+            }
+        }
+
+        throw new NotFoundException("User not exists, please enter existing userId!");
     }
     static bool IsValidPassword(string password)
     {

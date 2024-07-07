@@ -59,178 +59,230 @@ public class Program
                 goto Menu;
         }
 
-    UserMenu:
-        Helper.Print(
-            "1.Create new Category\n" +
-            "2.Create new Medicine\n" +
-            "3.Remove a medicine\n" +
-            "4.List all medicines\n" +
-            "5.Update medicine\n" +
-            "6.Find medicine by id\n" +
-            "7.Find medicine by Name\n" +
-            "8.Find medicine by category\n" +
-            "9.List all categories\n" +
-            "0.Log out", ConsoleColor.Cyan);
 
-        string loginUserCommand = Console.ReadLine();
-
-
-        switch (loginUserCommand)
+        if (activeUser.IsAdmin)
         {
-            case "1":
-                Helper.Print("Please enter category name:", ConsoleColor.DarkCyan);
-                string categoryName = Console.ReadLine();
-                Category category = new(categoryName, activeUser.Id);
-                categoryService.CreateCategory(category);
-                goto UserMenu;
-            case "2":
-                Helper.Print("Please enter medicine name:", ConsoleColor.DarkCyan);
-                string medicineName = Console.ReadLine();
-            repeatPrice:
-                Helper.Print("Please enter medicine price:", ConsoleColor.DarkCyan);
-                string priceStr = Console.ReadLine();
-                if (!decimal.TryParse(priceStr, out decimal price))
-                {
-                    Helper.Print("Please enter valid price!!", ConsoleColor.Red);
-                    goto repeatPrice;
-                }
-                int categoryId = GetValidCategoryID(activeUser.Id);
-                Medicine medicine = new(medicineName, price, DateTime.Now, categoryId, activeUser.Id);
-                try
-                {
-                    medicineService.CreateMedicine(medicine);
-                }
-                catch (NotFoundException ex)
-                {
-                    Helper.Print(ex.Message, ConsoleColor.Red);
-                }
-                goto UserMenu;
-            case "3":
-            repeatMedID:
-                Helper.Print("Existing medicines:", ConsoleColor.DarkYellow);
-                medicineService.GetAllMedicines(activeUser.Id);
-                Helper.Print("Please enter the medicine ID you want to delete:", ConsoleColor.DarkCyan);
-                string medicineIdStr = Console.ReadLine();
-                if (!int.TryParse(medicineIdStr, out int medicineId))
-                {
-                    Helper.Print("Please enter valid medicine ID!!", ConsoleColor.Red);
-                    goto repeatMedID;
-                }
-                medicineService.RemoveMedicine(medicineId);
-                goto UserMenu;
-            case "4":
-                medicineService.GetAllMedicines(activeUser.Id);
-                goto UserMenu;
-            case "5":
-            repeatNewMedicine:
-                Helper.Print("Existing medicines:", ConsoleColor.DarkYellow);
-                medicineService.GetAllMedicines(activeUser.Id);
-            updateId:
-                Helper.Print("Please enter the ID of the medicine you want to update:", ConsoleColor.DarkCyan);
-                string idStr = Console.ReadLine();
-                if (!int.TryParse(idStr, out int id))
-                {
-                    Helper.Print("Please enter a valid ID!", ConsoleColor.Red);
-                    goto updateId;
-                }
+        AdminMenu:
+            Helper.Print(
+                "Admin Menu: \n" +
+                "1. Get all Users \n" +
+                "0. Log out", ConsoleColor.Blue);
 
-                Helper.Print("Please enter the new name for the medicine:", ConsoleColor.DarkCyan);
-                string newName = Console.ReadLine();
-            newPrice:
-                Helper.Print("Please enter the new price for the medicine:", ConsoleColor.DarkCyan);
-                string newPriceStr = Console.ReadLine();
-                if (!decimal.TryParse(newPriceStr, out decimal newPrice))
-                {
-                    Helper.Print("Please enter a valid price!", ConsoleColor.Red);
-                    goto newPrice;
-                }
-                int newCategoryId = GetValidCategoryID(activeUser.Id);
-                Medicine newMedicine = new(newName, newPrice, DateTime.Now, newCategoryId, 0);
-                try
-                {
-                    medicineService.UpdateMedicine(id, newMedicine);
-                    Helper.Print("Medicine updated successfully!", ConsoleColor.Green);
-                }
-                catch (NotFoundException ex)
-                {
-                    Helper.Print(ex.Message, ConsoleColor.Red);
-                    goto repeatNewMedicine;
-                }
-                goto UserMenu;
-            case "6":
-            medId:
-                Helper.Print("Please enter medicine ID:", ConsoleColor.DarkCyan);
-                string medIdStr = Console.ReadLine();
-                if (!int.TryParse(medIdStr, out int medId))
-                {
-                    Helper.Print("Please enter a valid ID!", ConsoleColor.Red);
-                    goto medId;
-                }
-                try
-                {
-                    Medicine med = medicineService.GetMedicineById(medId, activeUser.Id);
-                    string medCategoryName = "";
-                    foreach (var cat in DB.Categories)
-                    {
-                        if (cat.Id == med.CategoryId)
-                        {
-                            medCategoryName = cat.Name;
-                            break;
-                        }
-                    }
-                    Helper.Print($"Medicine:{med.Name} - Price:{med.Price}- Category:{medCategoryName}- CreatedDate/Time:{med.CreatedDate}", ConsoleColor.White);
-                }
-                catch (NotFoundException ex)
-                {
-                    Helper.Print(ex.Message, ConsoleColor.Red);
-                }
-                goto UserMenu;
-            case "7":
-                Helper.Print("Please enter medicine name:", ConsoleColor.Blue);
-                string medName = Console.ReadLine();
-                try
-                {
-                    Medicine med = medicineService.GetMedicineByName(medName, activeUser.Id);
-                    string medCategoryName = "";
-                    foreach (var cat in DB.Categories)
-                    {
-                        if (cat.Id == med.CategoryId)
-                        {
-                            medCategoryName = cat.Name;
-                            break;
-                        }
-                    }
-                    Helper.Print($"Medicine:{med.Name} - Price:{med.Price}- Category:{medCategoryName}- CreatedDate/Time:{med.CreatedDate}", ConsoleColor.White);
-                }
-                catch (NotFoundException ex)
-                {
-                    Helper.Print(ex.Message, ConsoleColor.Red);
-                }
-                goto UserMenu;
-            case "8":
-                int searchCategoryId = GetValidCategoryID(activeUser.Id);
-                try
-                {
-                    medicineService.GetMedicineByCategory(searchCategoryId, activeUser.Id);
-                }
-                catch (NotFoundException ex)
-                {
-                    Helper.Print(ex.Message, ConsoleColor.Red);
-                }
+            string adminCommand = Console.ReadLine();
 
-                goto UserMenu;
-            case "9":
-                categoryService.GetAllCategories(activeUser.Id);
-                goto UserMenu;
-            case "0":
-                Helper.Print("Logging out...", ConsoleColor.Cyan);
-                activeUser = null;
-                goto Menu;
-            default:
-                Helper.Print("Please enter valid command", ConsoleColor.Red);
-                goto UserMenu;
+            switch (adminCommand)
+            {
+                case "1":
+                    userService.GetAllUsers();
+                    goto AdminMenu;
+                case "2":
+                    repeatUserId:
+                    Helper.Print("Existing users:",ConsoleColor.Cyan);
+                    userService.GetAllUsers();
+                    Helper.Print("Please enter the userId you want to delete:", ConsoleColor.DarkCyan);
+                    string userIdStr = Console.ReadLine();
+                    if (!int.TryParse(userIdStr, out int userId))
+                    {
+                        Helper.Print("Please enter valid medicine ID!!", ConsoleColor.Red);
+                        goto repeatUserId;
+                    }
+                    try
+                    {
+                        userService.RemoveUser(userId);
+                    }
+                    catch (NotFoundException ex)
+                    {
+                        Helper.Print(ex.Message, ConsoleColor.Red);
+                        goto repeatUserId;
+                    }
+                    goto AdminMenu;
+                case "3":
+                    // Add logic for managing medicines
+                    goto AdminMenu;
+                case "0":
+                    Helper.Print("Logging out...", ConsoleColor.Cyan);
+                    activeUser = null;
+                    goto Menu;
+                default:
+                    Helper.Print("Please enter valid command", ConsoleColor.Red);
+                    goto AdminMenu;
+            }
         }
+        else
+        {
 
+        UserMenu:
+            Helper.Print(
+                "1.Create new Category\n" +
+                "2.Create new Medicine\n" +
+                "3.Remove a medicine\n" +
+                "4.List all medicines\n" +
+                "5.Update medicine\n" +
+                "6.Find medicine by id\n" +
+                "7.Find medicine by Name\n" +
+                "8.Find medicine by category\n" +
+                "9.List all categories\n" +
+                "0.Log out", ConsoleColor.Cyan);
+
+            string loginUserCommand = Console.ReadLine();
+
+
+            switch (loginUserCommand)
+            {
+                case "1":
+                    Helper.Print("Please enter category name:", ConsoleColor.DarkCyan);
+                    string categoryName = Console.ReadLine();
+                    Category category = new(categoryName, activeUser.Id);
+                    categoryService.CreateCategory(category);
+                    goto UserMenu;
+                case "2":
+                    Helper.Print("Please enter medicine name:", ConsoleColor.DarkCyan);
+                    string medicineName = Console.ReadLine();
+                repeatPrice:
+                    Helper.Print("Please enter medicine price:", ConsoleColor.DarkCyan);
+                    string priceStr = Console.ReadLine();
+                    if (!decimal.TryParse(priceStr, out decimal price))
+                    {
+                        Helper.Print("Please enter valid price!!", ConsoleColor.Red);
+                        goto repeatPrice;
+                    }
+                    int categoryId = GetValidCategoryID(activeUser.Id);
+                    Medicine medicine = new(medicineName, price, DateTime.Now, categoryId, activeUser.Id);
+                    try
+                    {
+                        medicineService.CreateMedicine(medicine);
+                    }
+                    catch (NotFoundException ex)
+                    {
+                        Helper.Print(ex.Message, ConsoleColor.Red);
+                    }
+                    goto UserMenu;
+                case "3":
+                repeatMedID:
+                    Helper.Print("Existing medicines:", ConsoleColor.DarkYellow);
+                    medicineService.GetAllMedicines(activeUser.Id);
+                    Helper.Print("Please enter the medicine ID you want to delete:", ConsoleColor.DarkCyan);
+                    string medicineIdStr = Console.ReadLine();
+                    if (!int.TryParse(medicineIdStr, out int medicineId))
+                    {
+                        Helper.Print("Please enter valid medicine ID!!", ConsoleColor.Red);
+                        goto repeatMedID;
+                    }
+                    medicineService.RemoveMedicine(medicineId);
+                    goto UserMenu;
+                case "4":
+                    medicineService.GetAllMedicines(activeUser.Id);
+                    goto UserMenu;
+                case "5":
+                repeatNewMedicine:
+                    Helper.Print("Existing medicines:", ConsoleColor.DarkYellow);
+                    medicineService.GetAllMedicines(activeUser.Id);
+                updateId:
+                    Helper.Print("Please enter the ID of the medicine you want to update:", ConsoleColor.DarkCyan);
+                    string idStr = Console.ReadLine();
+                    if (!int.TryParse(idStr, out int id))
+                    {
+                        Helper.Print("Please enter a valid ID!", ConsoleColor.Red);
+                        goto updateId;
+                    }
+
+                    Helper.Print("Please enter the new name for the medicine:", ConsoleColor.DarkCyan);
+                    string newName = Console.ReadLine();
+                newPrice:
+                    Helper.Print("Please enter the new price for the medicine:", ConsoleColor.DarkCyan);
+                    string newPriceStr = Console.ReadLine();
+                    if (!decimal.TryParse(newPriceStr, out decimal newPrice))
+                    {
+                        Helper.Print("Please enter a valid price!", ConsoleColor.Red);
+                        goto newPrice;
+                    }
+                    int newCategoryId = GetValidCategoryID(activeUser.Id);
+                    Medicine newMedicine = new(newName, newPrice, DateTime.Now, newCategoryId, 0);
+                    try
+                    {
+                        medicineService.UpdateMedicine(id, newMedicine);
+                        Helper.Print("Medicine updated successfully!", ConsoleColor.Green);
+                    }
+                    catch (NotFoundException ex)
+                    {
+                        Helper.Print(ex.Message, ConsoleColor.Red);
+                        goto repeatNewMedicine;
+                    }
+                    goto UserMenu;
+                case "6":
+                medId:
+                    Helper.Print("Please enter medicine ID:", ConsoleColor.DarkCyan);
+                    string medIdStr = Console.ReadLine();
+                    if (!int.TryParse(medIdStr, out int medId))
+                    {
+                        Helper.Print("Please enter a valid ID!", ConsoleColor.Red);
+                        goto medId;
+                    }
+                    try
+                    {
+                        Medicine med = medicineService.GetMedicineById(medId, activeUser.Id);
+                        string medCategoryName = "";
+                        foreach (var cat in DB.Categories)
+                        {
+                            if (cat.Id == med.CategoryId)
+                            {
+                                medCategoryName = cat.Name;
+                                break;
+                            }
+                        }
+                        Helper.Print($"Medicine:{med.Name} - Price:{med.Price}- Category:{medCategoryName}- CreatedDate/Time:{med.CreatedDate}", ConsoleColor.White);
+                    }
+                    catch (NotFoundException ex)
+                    {
+                        Helper.Print(ex.Message, ConsoleColor.Red);
+                    }
+                    goto UserMenu;
+                case "7":
+                    Helper.Print("Please enter medicine name:", ConsoleColor.Blue);
+                    string medName = Console.ReadLine();
+                    try
+                    {
+                        Medicine med = medicineService.GetMedicineByName(medName, activeUser.Id);
+                        string medCategoryName = "";
+                        foreach (var cat in DB.Categories)
+                        {
+                            if (cat.Id == med.CategoryId)
+                            {
+                                medCategoryName = cat.Name;
+                                break;
+                            }
+                        }
+                        Helper.Print($"Medicine:{med.Name} - Price:{med.Price}- Category:{medCategoryName}- CreatedDate/Time:{med.CreatedDate}", ConsoleColor.White);
+                    }
+                    catch (NotFoundException ex)
+                    {
+                        Helper.Print(ex.Message, ConsoleColor.Red);
+                    }
+                    goto UserMenu;
+                case "8":
+                    int searchCategoryId = GetValidCategoryID(activeUser.Id);
+                    try
+                    {
+                        medicineService.GetMedicineByCategory(searchCategoryId, activeUser.Id);
+                    }
+                    catch (NotFoundException ex)
+                    {
+                        Helper.Print(ex.Message, ConsoleColor.Red);
+                    }
+
+                    goto UserMenu;
+                case "9":
+                    categoryService.GetAllCategories(activeUser.Id);
+                    goto UserMenu;
+                case "0":
+                    Helper.Print("Logging out...", ConsoleColor.Cyan);
+                    activeUser = null;
+                    goto Menu;
+                default:
+                    Helper.Print("Please enter valid command", ConsoleColor.Red);
+                    goto UserMenu;
+            }
+        }
     }
 
 
