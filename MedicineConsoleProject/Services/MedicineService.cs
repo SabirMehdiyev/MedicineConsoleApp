@@ -1,7 +1,6 @@
 ﻿using MedicineConsoleProject.ExceptionsFolder;
 using MedicineConsoleProject.Models;
 using MedicineConsoleProject.Utilities;
-using System.Security.Cryptography.X509Certificates;
 
 
 namespace MedicineConsoleProject.Services;
@@ -25,10 +24,12 @@ public class MedicineService
 
     public void GetAllMedicines(int userId)
     {
+        bool isMedicinesFound = false;
         foreach (var item in DB.Medicines)
         {
             if (item.UserId == userId)
             {
+                isMedicinesFound = true;
                 Category category1 = new("");
                 foreach (var category in DB.Categories)
                 {
@@ -39,9 +40,14 @@ public class MedicineService
                     }
                 }
                 Helper.Print("----------------------------------------------------------------------------------------------------------", ConsoleColor.White);
-                Helper.Print($"Medicine:{item.Name} - Price:{item.Price}- Category:{category1.Name}- CreatedDate/Time:{item.CreatedDate}", ConsoleColor.White);
+                Helper.Print($"Id:{item.Id} - Medicine:{item.Name} - Price:{item.Price}- Category:{category1.Name}- CreatedDate/Time:{item.CreatedDate}", ConsoleColor.White);
                 Helper.Print("----------------------------------------------------------------------------------------------------------", ConsoleColor.White);
             }
+        }
+
+        if (!isMedicinesFound)
+        {
+            Helper.Print("No medicines found for this user.", ConsoleColor.Yellow);
         }
     }
     public Medicine GetMedicineById(int id, int userId)
@@ -100,9 +106,12 @@ public class MedicineService
                 }
 
                 Array.Resize(ref DB.Medicines, DB.Medicines.Length - 1);
-                Helper.Print("Product successfully deleted", ConsoleColor.Red);
+                Helper.Print("Medicine successfully deleted", ConsoleColor.Green);
+                return;
             }
         }
+
+        throw new NotFoundException("Medicine not found");
     }
     public void UpdateMedicine(int id,Medicine medicine)
     {
@@ -113,6 +122,7 @@ public class MedicineService
                 item.Name = medicine.Name;
                 item.Price = medicine.Price;
                 item.CategoryId = medicine.CategoryId;
+                return;
             }
         }
         throw new NotFoundException($"{id} id-li medicine tapilmadi");

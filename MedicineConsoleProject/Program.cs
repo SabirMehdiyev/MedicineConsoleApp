@@ -13,7 +13,6 @@ public class Program
         MedicineService medicineService = new();
         CategoryService categoryService = new();
 
-        //list all categoriee
         Helper.Print("Welcome!", ConsoleColor.DarkCyan);
     Menu:
         Helper.Print
@@ -114,9 +113,54 @@ public class Program
                 }
                 goto UserMenu;
             case "3":
-                break;
+                repeatMedID:
+                Helper.Print("Existing medicines:", ConsoleColor.DarkYellow);
+                medicineService.GetAllMedicines(activeUser.Id);
+                Helper.Print("Please enter the medicine ID you want to delete:" , ConsoleColor.DarkCyan);
+                string medicineIdStr = Console.ReadLine();
+                if (!int.TryParse(medicineIdStr, out int medicineId))
+                {
+                    Helper.Print("Please enter valid medicine ID!!", ConsoleColor.Red);
+                    goto repeatMedID;
+                }
+                medicineService.RemoveMedicine(medicineId);
+                goto UserMenu;
             case "4":
                 medicineService.GetAllMedicines(activeUser.Id);
+                goto UserMenu;
+            case "5":
+            repeatNewMedicine:
+                Helper.Print("Existing medicines:", ConsoleColor.DarkYellow);
+                medicineService.GetAllMedicines(activeUser.Id);
+                Helper.Print("Please enter the ID of the medicine you want to update:", ConsoleColor.DarkCyan);
+                string idStr = Console.ReadLine();
+                if (!int.TryParse(idStr, out int id))
+                {
+                    Helper.Print("Please enter a valid ID!", ConsoleColor.Red);
+                    return;
+                }
+                Helper.Print("Please enter the new name for the medicine:", ConsoleColor.DarkCyan);
+                string newName = Console.ReadLine();
+                Helper.Print("Please enter the new price for the medicine:", ConsoleColor.DarkCyan);
+                string newPriceStr = Console.ReadLine();
+                if (!decimal.TryParse(newPriceStr, out decimal newPrice))
+                {
+                    Helper.Print("Please enter a valid price!", ConsoleColor.Red);
+                    return;
+                }
+                int newCategoryId = GetValidCategoryID();
+                Medicine newMedicine = new(newName, newPrice, DateTime.Now, newCategoryId, 0);
+
+                try
+                {
+                    medicineService.UpdateMedicine(id, newMedicine);
+                    Helper.Print("Medicine updated successfully!", ConsoleColor.Green);
+                }
+                catch (NotFoundException ex)
+                {
+                    Helper.Print(ex.Message, ConsoleColor.Red);
+                    goto repeatNewMedicine;
+                }
                 goto UserMenu;
             case "7":
                 Helper.Print("Existing medicines:", ConsoleColor.Cyan);
