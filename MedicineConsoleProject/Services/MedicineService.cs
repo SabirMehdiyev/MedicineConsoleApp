@@ -19,7 +19,7 @@ public class MedicineService
                 return;
             }
         }
-        throw new NotFoundException("Category tapilmadi");
+        throw new NotFoundException("Category not found");
     }
 
     public  void GetAllMedicines(int userId)
@@ -125,6 +125,6 @@ public class MedicineService
                 return;
             }
         }
-        throw new NotFoundException($"{id} id-li medicine tapilmadi");
+        throw new NotFoundException($"Medicine with ID {id} was not found.");
     }
 }

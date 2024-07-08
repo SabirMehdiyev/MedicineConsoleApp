@@ -7,6 +7,7 @@ public class User:BaseEntity
     public string Email { get; set; }
     public string Password { get; set; }
     public bool IsAdmin { get; set; }
+    public bool IsBlocked { get; set; }
 
     public User(string fullName, string email,string password, bool isAdmin)
     {
@@ -15,5 +16,6 @@ public class User:BaseEntity
         Email = email;
         Password = password;
         IsAdmin = isAdmin;
+        IsBlocked = false;
     }
 }

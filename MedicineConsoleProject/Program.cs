@@ -41,7 +41,6 @@ public class Program
                 {
                     activeUser = userService.Login(email, password);
                     Helper.Print($"Welcome, {activeUser.Fullname}! ", ConsoleColor.DarkCyan);
-
                     break;
 
                 }
@@ -64,9 +63,11 @@ public class Program
         {
         AdminMenu:
             Helper.Print(
-                "Admin Menu: \n" +
-                "1. Get all Users \n" +
-                "0. Log out", ConsoleColor.Blue);
+                "Admin Menu:\n" +
+                "1.Get all Users\n" +
+                "2.Block User\n" +
+                "3.Unblock User\n" +
+                "0.Log out", ConsoleColor.Blue);
 
             string adminCommand = Console.ReadLine();
 
@@ -76,19 +77,19 @@ public class Program
                     userService.GetAllUsers();
                     goto AdminMenu;
                 case "2":
-                    repeatUserId:
-                    Helper.Print("Existing users:",ConsoleColor.Cyan);
+                repeatUserId:
+                    Helper.Print("Existing users:", ConsoleColor.Cyan);
                     userService.GetAllUsers();
-                    Helper.Print("Please enter the userId you want to delete:", ConsoleColor.DarkCyan);
+                    Helper.Print("Please enter the userId you want to block:", ConsoleColor.DarkCyan);
                     string userIdStr = Console.ReadLine();
                     if (!int.TryParse(userIdStr, out int userId))
                     {
-                        Helper.Print("Please enter valid medicine ID!!", ConsoleColor.Red);
+                        Helper.Print("Please enter valid user Id!!", ConsoleColor.Red);
                         goto repeatUserId;
                     }
                     try
                     {
-                        userService.RemoveUser(userId);
+                        userService.BlockUser(userId);
                     }
                     catch (NotFoundException ex)
                     {
@@ -97,10 +98,28 @@ public class Program
                     }
                     goto AdminMenu;
                 case "3":
-                    // Add logic for managing medicines
+                repeatUnblockUserId:
+                    Helper.Print("Existing users:", ConsoleColor.Cyan);
+                    userService.GetAllUsers();
+                    Helper.Print("Please enter the userId you want to unblock:", ConsoleColor.DarkCyan);
+                    string unblockUserIdStr = Console.ReadLine();
+                    if (!int.TryParse(unblockUserIdStr, out int unblockUserId))
+                    {
+                        Helper.Print("Please enter valid user ID!!", ConsoleColor.Red);
+                        goto repeatUnblockUserId;
+                    }
+                    try
+                    {
+                        userService.UnblockUser(unblockUserId);
+                    }
+                    catch (NotFoundException ex)
+                    {
+                        Helper.Print(ex.Message, ConsoleColor.Red);
+                        goto repeatUnblockUserId;
+                    }
                     goto AdminMenu;
                 case "0":
-                    Helper.Print("Logging out...", ConsoleColor.Cyan);
+                    Helper.Print("Logging out...", ConsoleColor.DarkGreen);
                     activeUser = null;
                     goto Menu;
                 default:
@@ -122,6 +141,7 @@ public class Program
                 "7.Find medicine by Name\n" +
                 "8.Find medicine by category\n" +
                 "9.List all categories\n" +
+                "10.Reset Password\n" +
                 "0.Log out", ConsoleColor.Cyan);
 
             string loginUserCommand = Console.ReadLine();
@@ -146,15 +166,22 @@ public class Program
                         Helper.Print("Please enter valid price!!", ConsoleColor.Red);
                         goto repeatPrice;
                     }
+                repeatCategory:
                     int categoryId = GetValidCategoryID(activeUser.Id);
-                    Medicine medicine = new(medicineName, price, DateTime.Now, categoryId, activeUser.Id);
                     try
                     {
+                        Medicine medicine = new(medicineName, price, DateTime.Now, categoryId, activeUser.Id);
                         medicineService.CreateMedicine(medicine);
                     }
                     catch (NotFoundException ex)
                     {
                         Helper.Print(ex.Message, ConsoleColor.Red);
+                        goto repeatCategory;
+                    }
+                    catch (Exception ex)
+                    {
+                        Helper.Print(ex.Message, ConsoleColor.Red);
+                        goto repeatPrice;
                     }
                     goto UserMenu;
                 case "3":
@@ -168,7 +195,15 @@ public class Program
                         Helper.Print("Please enter valid medicine ID!!", ConsoleColor.Red);
                         goto repeatMedID;
                     }
-                    medicineService.RemoveMedicine(medicineId);
+                    try
+                    {
+                        medicineService.RemoveMedicine(medicineId);
+                    }
+                    catch (NotFoundException ex)
+                    {
+                        Helper.Print(ex.Message, ConsoleColor.Red);
+                        goto repeatMedID;
+                    }
                     goto UserMenu;
                 case "4":
                     medicineService.GetAllMedicines(activeUser.Id);
@@ -185,7 +220,21 @@ public class Program
                         Helper.Print("Please enter a valid ID!", ConsoleColor.Red);
                         goto updateId;
                     }
-
+                    Medicine existingMedicine = null;
+                    try
+                    {
+                        existingMedicine = medicineService.GetMedicineById(id, activeUser.Id);
+                        if (existingMedicine.UserId != activeUser.Id)
+                        {
+                            Helper.Print("You can only update your own medicines.", ConsoleColor.Red);
+                            goto repeatNewMedicine;
+                        }
+                    }
+                    catch (NotFoundException ex)
+                    {
+                        Helper.Print(ex.Message, ConsoleColor.Red);
+                        goto repeatNewMedicine;
+                    }
                     Helper.Print("Please enter the new name for the medicine:", ConsoleColor.DarkCyan);
                     string newName = Console.ReadLine();
                 newPrice:
@@ -197,9 +246,9 @@ public class Program
                         goto newPrice;
                     }
                     int newCategoryId = GetValidCategoryID(activeUser.Id);
-                    Medicine newMedicine = new(newName, newPrice, DateTime.Now, newCategoryId, 0);
                     try
                     {
+                        Medicine newMedicine = new(newName, newPrice, DateTime.Now, newCategoryId, 0);
                         medicineService.UpdateMedicine(id, newMedicine);
                         Helper.Print("Medicine updated successfully!", ConsoleColor.Green);
                     }
@@ -207,6 +256,11 @@ public class Program
                     {
                         Helper.Print(ex.Message, ConsoleColor.Red);
                         goto repeatNewMedicine;
+                    }
+                    catch (Exception ex)
+                    {
+                        Helper.Print(ex.Message, ConsoleColor.Red);
+                        goto newPrice;
                     }
                     goto UserMenu;
                 case "6":
@@ -274,8 +328,22 @@ public class Program
                 case "9":
                     categoryService.GetAllCategories(activeUser.Id);
                     goto UserMenu;
+                case "10":
+                    Helper.Print("Enter new password:", ConsoleColor.DarkCyan);
+                    string newPassword = Console.ReadLine();
+
+                    try
+                    {
+                        userService.ResetPassword(activeUser.Id, newPassword);
+                    }
+                    catch (NotFoundException ex)
+                    {
+                        Helper.Print(ex.Message, ConsoleColor.Red);
+                    }
+
+                    goto UserMenu;
                 case "0":
-                    Helper.Print("Logging out...", ConsoleColor.Cyan);
+                    Helper.Print("Logging out...", ConsoleColor.DarkGreen);
                     activeUser = null;
                     goto Menu;
                 default:
